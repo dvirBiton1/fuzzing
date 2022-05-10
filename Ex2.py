@@ -18,7 +18,7 @@ def sshAnalysis(p):
         if b < threshold:
             faildssh[key] = port
             print("fuzzing!")
-            # exit(0)
+            exit(0)
         else:
             print("good connection")
     else:
@@ -39,5 +39,5 @@ def printResults(failed, protocol):
 
 if __name__ == '__main__':
     sniff(offline="ssh.pcapng",prn=analyzePacket)
-    # sniff(iface="enp0s3", filter="port 22", prn=analyzePacket)
+    sniff(iface="enp0s3", filter="port 22", prn=analyzePacket)
     printResults(faildssh, "SSH")
