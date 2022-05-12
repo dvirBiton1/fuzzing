@@ -1,43 +1,30 @@
-from scapy.all import *
-from scapy.layers.inet import TCP
-sum = []
-faildssh = {}
-threshold = 5000
-b = 0
+import time
+from datetime import datetime
 
-def sshAnalysis(p):
-    global b
-    sip = p[IP].src
-    cip = p[IP].dst
-    key = "%s->%s" % (cip, sip)
-    port = p[TCP].dport
-    l = p[IP].len + 14
-    if "F" in p[TCP].flags:
-        for s in sum:
-            b += s
-        if b < threshold:
-            faildssh[key] = port
-            print("fuzzing!")
+def log_scanner():
+    fuzz1 = 0
+    flag = 0
+    fuzzAttck = 1
+    filesize = 0
+    while fuzzAttck:
+        with open("/var/log/auth.log","r") as f:
+            lines = f.readlines()
+            if len(lines) != filesize:
+                for l in range(filesize, len(lines)):
+                    # print(l)
+                    # print(lines[l])
+                    p =lines[l].split()
+                    if ("error:" in p or ("Connection" in p and "closed" in p) or ("banner" in p and "exchange" in p) )and flag:
+                        fuzz1 += 1
+        if fuzz1 >= 5 and flag:
+            print(fuzz1)
+            print("fuzzing attack")
             exit(0)
         else:
-            print("good connection")
-    else:
-        sum.append(l)
-
-
-def analyzePacket(p):
-    if p.haslayer(TCP):
-        if (p[TCP].sport == 22):
-            sshAnalysis(p)
-
-
-def printResults(failed, protocol):
-    print(f"{protocol} faild connections:")
-    for f in failed:
-        print(f"\t {(f, failed[f])}")
-
+            flag = 1
+        time.sleep(5)
+        print(f"fuzz1 = {fuzz1}")
+        filesize = len(lines)
 
 if __name__ == '__main__':
-    sniff(offline="ssh.pcapng",prn=analyzePacket)
-    sniff(iface="enp0s3", filter="port 22", prn=analyzePacket)
-    printResults(faildssh, "SSH")
+    log_scanner()
